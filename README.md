@@ -25,40 +25,125 @@ The goal: **fewer iterations, fewer syntax errors, more working metadata on the 
 
 ## How It Works
 
-The skill is a `.skill` file (a zip archive) containing a `SKILL.md` entrypoint and 12 reference files in a `references/` folder. When loaded into Claude — either via Claude Code's skills directory or as context in Claude.ai — it gives the model specific, actionable knowledge about Salesforce metadata patterns.
+The skill follows the [Agent Skills open standard](https://agentskills.io) — a `SKILL.md` entrypoint with YAML frontmatter and 12 reference files in a `references/` folder. When loaded into Claude, it gives the model specific, actionable knowledge about Salesforce metadata patterns.
 
 It doesn't try to replace Salesforce documentation. It focuses on the things that LLMs consistently get wrong: XML structure, element ordering, reference formats, deployment gotchas, and the undocumented quirks that only show up when you actually try to deploy.
 
 ## Installation
 
-### Claude Code
+### Prerequisites
 
-Drop the extracted folder into your project's skills directory:
+- A Claude **Pro**, **Max**, **Team**, or **Enterprise** subscription (Skills are not available on the free tier)
+- **Code execution and file creation** enabled (Settings → Capabilities)
+
+### Claude.ai (Web)
+
+1. Download the `.skill` file from the [latest release](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/releases)
+2. Go to **Customize** → **Skills**
+3. Upload the `.skill` file
+4. Make sure the skill toggle is **on**
+
+Claude will automatically load the skill when it detects a Salesforce-related task. You can also say _"use the salesforce-developer skill"_ to invoke it explicitly.
+
+> **Team / Enterprise:** Organization owners can provision the skill org-wide under Admin settings → Skills. It will then appear for all members automatically.
+
+### Claude Desktop App
+
+The Claude desktop app (macOS / Windows) uses the same skill system as claude.ai:
+
+1. Download the `.skill` file from the [latest release](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/releases)
+2. Open the Claude desktop app
+3. Go to **Customize** → **Skills**
+4. Upload the `.skill` file
+5. Make sure the skill toggle is **on**
+
+That's it — the skill works the same way across web and desktop.
+
+### Claude Code (Terminal)
+
+You can install the skill at two levels:
+
+**Personal (available in all your projects):**
+
+```bash
+# Clone and copy to your personal skills directory
+git clone https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill.git
+mkdir -p ~/.claude/skills/salesforce-developer
+cp -r Claude-Salesforce-Developer-Skill/SKILL.md ~/.claude/skills/salesforce-developer/
+cp -r Claude-Salesforce-Developer-Skill/references ~/.claude/skills/salesforce-developer/
+```
+
+**Project-level (available only in a specific project):**
+
+```bash
+# From your Salesforce project root
+mkdir -p .claude/skills/salesforce-developer
+cp -r /path/to/Claude-Salesforce-Developer-Skill/SKILL.md .claude/skills/salesforce-developer/
+cp -r /path/to/Claude-Salesforce-Developer-Skill/references .claude/skills/salesforce-developer/
+```
+
+Your directory structure should look like this:
 
 ```
-your-project/
-├── .claude/
-│   └── skills/
-│       └── salesforce-developer/
-│           ├── SKILL.md
-│           └── references/
-│               ├── apex-patterns.md
-│               ├── architecture.md
-│               ├── data-queries.md
-│               ├── debugging.md
-│               ├── deployment-devops.md
-│               ├── flows-automation.md
-│               ├── integrations.md
-│               ├── lwc-guide.md
-│               ├── metadata-validation.md
-│               ├── security-permissions.md
-│               ├── sf-cli.md
-│               └── sources.md
+~/.claude/skills/                        # personal
+  └── salesforce-developer/
+      ├── SKILL.md
+      └── references/
+          ├── apex-patterns.md
+          ├── architecture.md
+          ├── data-queries.md
+          ├── debugging.md
+          ├── deployment-devops.md
+          ├── flows-automation.md
+          ├── integrations.md
+          ├── lwc-guide.md
+          ├── metadata-validation.md
+          ├── security-permissions.md
+          ├── sf-cli.md
+          └── sources.md
 ```
 
-### Claude.ai
+Claude Code discovers skills automatically — no restart needed. You can verify it's loaded by asking Claude _"what skills do you have available?"_ or by checking if it references the skill in its chain of thought.
 
-Add the contents of `SKILL.md` to your user preferences or project instructions, with the relevant reference files attached as context.
+> **Tip:** If you install at the project level, commit `.claude/skills/` to your repo so the whole team gets it.
+
+### Updating
+
+**Claude.ai / Desktop:** Upload the new `.skill` file in Customize → Skills. It replaces the previous version.
+
+**Claude Code:** Pull the latest from the repo and copy the files again:
+
+```bash
+cd Claude-Salesforce-Developer-Skill
+git pull
+cp -r SKILL.md ~/.claude/skills/salesforce-developer/
+cp -r references ~/.claude/skills/salesforce-developer/
+```
+
+## Crowdsourced Error Logging
+
+When this skill is installed, it encourages Claude to document deployment errors and their solutions as they happen. The idea is simple: every time you hit a metadata error and work through the fix, that's knowledge that should flow back into the skill so the next developer doesn't hit the same wall.
+
+**How it works in practice:**
+
+When you encounter a deployment error while using this skill, ask Claude to format it as a contribution:
+
+> _"Log this deployment error and solution to the skill repo"_
+
+Claude will generate a structured error report you can submit as a GitHub issue or PR:
+
+```markdown
+### Error: [error message]
+**Metadata type:** Flow / Apex / LWC / PermissionSet / etc.
+**Context:** What you were trying to do
+**Root cause:** Why it failed
+**Fix:** The actual solution
+**Detection:** How to catch this before deploying
+```
+
+You can then submit it to [the repo](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/issues/new) — we'll review and fold it into the appropriate reference file.
+
+This is the core loop of the experiment: **deploy → fail → fix → document → share → prevent**. The more errors we collect and codify, the fewer iterations everyone needs.
 
 ## Does It Actually Help?
 
@@ -73,6 +158,7 @@ This skill gets better with every real-world deployment failure, every undocumen
 ### Ways to contribute
 
 **Report a problem** — If Claude generated bad metadata despite using this skill, open an issue with:
+
 - What you asked for
 - What Claude generated
 - What the actual fix was
@@ -101,7 +187,7 @@ The reference files total about 60 KB of compressed, actionable knowledge. That'
 
 ## Built By
 
-[JourneyBuilders](https://github.com/JourneyBuilders) 
+[JourneyBuilders](https://github.com/JourneyBuilders)
 
 ## License
 
