@@ -815,7 +815,8 @@ the record variable's Id directly. Instead:
 
 ### 8. Deployment Strategy: Use Targeted Source Paths
 
-Avoid full project deploys when deploying specific features:
+Avoid full project deploys when deploying specific features or when the full project
+has known issues in other components:
 
 ```bash
 # Deploy only specific files - avoids failures from unrelated metadata
@@ -824,11 +825,82 @@ sf project deploy start \
   --source-dir force-app/main/default/classes/MyClass.cls \
   --ignore-conflicts
 
+# Use -d shorthand for targeted deploys during iterative development
+sf project deploy start \
+  -d force-app/main/default/objects/MyObject__c \
+  -d force-app/main/default/classes/MyClass.cls
+
 # Validate first without deploying (dry run)
 sf project deploy start \
   --source-dir force-app/main/default/flows/My_Flow.flow-meta.xml \
   --dry-run
 ```
+
+**Always test targeted deploys first** — when the full project has known issues or
+unrelated failures, use `-d` / `--source-dir` to deploy only the components you're
+working on. This isolates your changes from pre-existing problems.
+
+### 9. Verify Pre-Existing Failures Before Debugging
+
+When a deploy fails, always test with the **unmodified file** first to distinguish
+your errors from org drift or pre-existing issues:
+
+```bash
+# 1. Stash your changes
+git stash
+
+# 2. Deploy the unmodified version
+sf project deploy start \
+  -d force-app/main/default/objects/MyObject__c/fields/MyField__c.field-meta.xml
+
+# 3. If the unmodified file also fails, the problem is org drift — not your change
+# 4. Restore your changes
+git stash pop
+```
+
+This prevents wasting time debugging "your" errors that are actually caused by
+org-level changes (field deletions, permission changes, package upgrades) that
+happened outside source control.
+
+### 10. CampaignMember: Standard Junction Object Restrictions
+
+CampaignMember is a special standard junction object (Campaign ↔ Contact/Lead) with
+metadata restrictions that differ from regular objects:
+
+- **No field history tracking** — `enableHistory` and `trackHistory` are not
+  supported. The API will reject metadata that includes history tracking settings.
+- **Limited metadata API support** — certain operations available on regular custom
+  or standard objects are not supported for CampaignMember.
+- **Standard fields are implicit** — fields like `Status` and `FirstRespondedDate`
+  exist on the object but cannot be explicitly declared in layout XML.
+
+When working with CampaignMember, retrieve the current metadata from the org first
+to see exactly which elements are supported:
+```bash
+sf project retrieve start --metadata "CustomObject:CampaignMember" --target-org myorg
+```
+
+### 11. Related List Field References: Format Varies by List Type
+
+In Layout XML, related list column references use different formats depending on
+the related list type. CampaignMember-related lists are a common source of errors:
+
+| Related List | Campaign Name Column | Custom Field Column |
+|-------------|---------------------|-------------------|
+| `RelatedCampaignList` | `CAMPAIGN.NAME` | `CampaignMember.MyField__c` |
+| Standard CampaignMember fields | Cannot be explicitly specified in layout XML | N/A |
+
+**Rules:**
+- `RelatedCampaignList` uses `CAMPAIGN.NAME` for the campaign name (parent object
+  prefix), but `CampaignMember.<field>` for custom fields on the junction object.
+- Standard CampaignMember fields (`Status`, `FirstRespondedDate`) are managed by
+  Salesforce and **cannot** be explicitly listed as columns in the layout XML — they
+  appear automatically.
+- When in doubt, retrieve the layout from the org and inspect which columns
+  Salesforce includes:
+  ```bash
+  sf project retrieve start --metadata "Layout:Contact-Contact Layout" --target-org myorg
+  ```
 
 ---
 
