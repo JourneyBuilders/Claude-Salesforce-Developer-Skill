@@ -38,10 +38,12 @@ It doesn't try to replace Salesforce documentation. It focuses on the things tha
 
 ### Claude.ai (Web)
 
-1. Download the `.skill` file from the [latest release](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/releases)
+1. Download [`salesforce-developer.skill`](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/raw/main/salesforce-developer.skill) from the repo
 2. Go to **Customize** → **Skills**
 3. Upload the `.skill` file
 4. Make sure the skill toggle is **on**
+
+The `.skill` file is a zip archive containing SKILL.md and all 12 reference files — no additional uploads needed.
 
 Claude will automatically load the skill when it detects a Salesforce-related task. You can also say _"use the salesforce-developer skill"_ to invoke it explicitly.
 
@@ -51,7 +53,7 @@ Claude will automatically load the skill when it detects a Salesforce-related ta
 
 The Claude desktop app (macOS / Windows) uses the same skill system as claude.ai:
 
-1. Download the `.skill` file from the [latest release](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/releases)
+1. Download [`salesforce-developer.skill`](https://github.com/JourneyBuilders/Claude-Salesforce-Developer-Skill/raw/main/salesforce-developer.skill) from the repo
 2. Open the Claude desktop app
 3. Go to **Customize** → **Skills**
 4. Upload the `.skill` file
